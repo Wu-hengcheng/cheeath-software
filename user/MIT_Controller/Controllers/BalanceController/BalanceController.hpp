@@ -50,10 +50,10 @@ class BalanceController {
   // use new kinematics measurements to update QP
   void updateProblemData(double* xfb_in, double* p_feet_in, double* p_des,
                          double* p_act, double* v_des, double* v_act,
-                         double* O_err, double yaw_act_in);
+                         double* O_err, double yaw_act_in); // 更新QP的数据, _in是输入数据，其他的为更新的数据
 
   void SetContactData(double* contact_state_in, double* min_forces_in,
-                      double* max_forces_in);
+                      double* max_forces_in); //通过函数输入，更新[R1]的（8）的di两项，为QP的约束 
 
   // calculate the QP, return solution
   void solveQP(double* xOpt);
@@ -61,28 +61,45 @@ class BalanceController {
 
   // update desired COM and orientation setpoints
   void set_desiredTrajectoryData(double* rpy_des_in, double* p_des_in,
-                                 double* omegab_des_in, double* v_des_in);
+                                 double* omegab_des_in, double* v_des_in);//通过输入参数，设置期望轨迹数据
+  
   void set_PDgains(double* Kp_COM_in, double* Kd_COM_in, double* Kp_Base_in,
-                   double* Kd_Base_in);
+                   double* Kd_Base_in);//用于设置[R1] （3）、（4）的PD值
+  
+  //设置 use_hard_constraint_pitch
   void set_QP_options(double use_hard_constraint_pitch_in);
 
   // configure gains, QP weights, force limits, world parameters
+  //设置最大最小足底力
   void set_RobotLimits();
+
+  //设置环境参数，重力，平面法向量方向，摩擦系数，平面切向量方向
   void set_worldData();
-  void set_PDgains();
+  void set_PDgains(); //没找到实现
+
+  //设置正定权重矩阵S_control，[R1]的（6）的S
   void set_wrench_weights(double* COM_weights_in, double* Base_weights_in);
+
+  //设置QP问题的权重，初始化[R1]的（6）中的 W, S，alpha = 0.1
   void set_QPWeights();
+
+  //单独设置摩擦因数
   void set_friction(double mu_in);
+  //单独设置[R1]的（6）中的alpha
   void set_alpha_control(double alpha_control_in);
+  //设置机器人质量
   void set_mass(double mass_in);
+  //通过输入参数，设置摆动腿的期望位置
   void set_desired_swing_pos(double* pFeet_des_in);
+  //通过输入参数，设置摆动腿的实际位置
   void set_actual_swing_pos(double* pFeet_act_in);
 
   // print QP matrices (real_t)
   void print_QPData();
 
-  void verifyModel(double* vbd_command);
+  void verifyModel(double* vbd_command); //不清楚什么意思
   void set_base_support_flag(double sflag);
+  //使用lcm发布qp_controller_data数据到CONTROLLER_qp_controller_data话题
   void publish_data_lcm();
 
  private:
@@ -212,16 +229,25 @@ class BalanceController {
   /* Interface Functions */
   bool getQPFinished();
 
+  //Update the A matrix in the controller notation A*f = b
   void update_A_control();
+  // 计算cheetah 3 （3），得到期望的b_control矩阵
   void calc_PDcontrol();
 
   void calc_H_qpOASES();
+  //计算[R1]的（8）的C矩阵，将c_control矩阵copy到A_qpOASES数组
   void calc_A_qpOASES();
+  //计算g_eigen矩阵，并存储到g_qpOASES数组
   void calc_g_qpOASES();
+
   void calc_lb_ub_qpOASES();
+  //计算[R1]的（8）的di两项，为QP的约束
   void calc_lbA_ubA_qpOASES();
+
+  //更新输入参数，更新数据存储到qp_controller_data
   void update_log_variables(double* p_des, double* p_act, double* v_des,
                             double* v_act, double* O_err);
+   //QP约束检测，计算[R1](6)的C*f，更新qp_controller_data约束项
   void calc_constraint_check();
 
   /* Utility Functions */

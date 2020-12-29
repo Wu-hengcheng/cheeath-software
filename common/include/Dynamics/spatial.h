@@ -19,8 +19,8 @@ using namespace ori;
 enum class JointType { Prismatic, Revolute, FloatingBase, Nothing };
 
 /*!
- * Calculate the spatial coordinate transform from A to B where B is rotate by
- * theta about axis.
+ * Calculate the spatial coordinate transform from A to B where B is rotate by theta about axis.
+ * 计算从A到B的空间坐标变换，其中B绕轴旋转theta。
  */
 template <typename T>
 SXform<T> spatialRotation(CoordinateAxis axis, T theta) {
@@ -34,8 +34,8 @@ SXform<T> spatialRotation(CoordinateAxis axis, T theta) {
 }
 
 /*!
- * Compute the spatial motion cross product matrix.
- * Prefer motionCrossProduct when possible.
+ * Compute the spatial motion cross product matrix. Prefer motionCrossProduct when possible.
+ *计算空间运动叉积矩阵。尽可能使用motionCrossProduct。
  */
 template <typename T>
 auto motionCrossMatrix(const Eigen::MatrixBase<T>& v) {
@@ -51,8 +51,8 @@ auto motionCrossMatrix(const Eigen::MatrixBase<T>& v) {
 }
 
 /*!
- * Compute spatial force cross product matrix.
- * Prefer forceCrossProduct when possible
+ * Compute spatial force cross product matrix.Prefer forceCrossProduct when possible
+ *计算跨空间力的叉积矩阵。尽可能使用forceCrossProduct
  */
 template <typename T>
 auto forceCrossMatrix(const Eigen::MatrixBase<T>& v) {
@@ -64,8 +64,8 @@ auto forceCrossMatrix(const Eigen::MatrixBase<T>& v) {
 }
 
 /*!
- * Compute spatial motion cross product.  Faster than the matrix multiplication
- * version
+ * Compute spatial motion cross product.  Faster than the matrix multiplication version
+ * 计算空间运动叉积。比矩阵乘法版本快
  */
 template <typename T>
 auto motionCrossProduct(const Eigen::MatrixBase<T>& a,
@@ -82,8 +82,8 @@ auto motionCrossProduct(const Eigen::MatrixBase<T>& a,
 }
 
 /*!
- * Compute spatial force cross product.  Faster than the matrix multiplication
- * version
+ * Compute spatial force cross product.  Faster than the matrix multiplication version
+ * 计算空间力叉积。比矩阵乘法版本快
  */
 template <typename T>
 auto forceCrossProduct(const Eigen::MatrixBase<T>& a,
@@ -101,6 +101,7 @@ auto forceCrossProduct(const Eigen::MatrixBase<T>& a,
 
 /*!
  * Convert a spatial transform to a homogeneous coordinate transformation
+ * 将空间变换转换为齐次坐标变换
  */
 template <typename T>
 auto sxformToHomogeneous(const Eigen::MatrixBase<T>& X) {
@@ -117,6 +118,7 @@ auto sxformToHomogeneous(const Eigen::MatrixBase<T>& X) {
 
 /*!
  * Convert a homogeneous coordinate transformation to a spatial one
+ * 将齐次坐标变换转换为空间坐标变换
  */
 template <typename T>
 auto homogeneousToSXform(const Eigen::MatrixBase<T>& H) {
@@ -133,6 +135,7 @@ auto homogeneousToSXform(const Eigen::MatrixBase<T>& H) {
 
 /*!
  * Create spatial coordinate transformation from rotation and translation
+ * 从旋转和平移创建空间坐标变换
  */
 template <typename T, typename T2>
 auto createSXform(const Eigen::MatrixBase<T>& R,
@@ -150,6 +153,7 @@ auto createSXform(const Eigen::MatrixBase<T>& R,
 
 /*!
  * Get rotation matrix from spatial transformation
+ * 从空间变换获取旋转矩阵
  */
 template <typename T>
 auto rotationFromSXform(const Eigen::MatrixBase<T>& X) {
@@ -161,6 +165,7 @@ auto rotationFromSXform(const Eigen::MatrixBase<T>& X) {
 
 /*!
  * Get translation vector from spatial transformation
+ * 从空间变换获取翻译向量
  */
 template <typename T>
 auto translationFromSXform(const Eigen::MatrixBase<T>& X) {
@@ -174,6 +179,7 @@ auto translationFromSXform(const Eigen::MatrixBase<T>& X) {
 
 /*!
  * Invert a spatial transformation (much faster than matrix inverse)
+ * 反转空间变换（比矩阵逆运算快得多）
  */
 template <typename T>
 auto invertSXform(const Eigen::MatrixBase<T>& X) {
@@ -188,6 +194,7 @@ auto invertSXform(const Eigen::MatrixBase<T>& X) {
 
 /*!
  * Compute joint motion subspace vector
+ * 计算关节运动子空间矢量
  */
 template <typename T>
 SVec<T> jointMotionSubspace(JointType joint, CoordinateAxis axis) {
@@ -212,6 +219,7 @@ SVec<T> jointMotionSubspace(JointType joint, CoordinateAxis axis) {
 
 /*!
  * Compute joint transformation
+ * 计算关节变换
  */
 template <typename T>
 Mat6<T> jointXform(JointType joint, CoordinateAxis axis, T q) {
@@ -236,6 +244,7 @@ Mat6<T> jointXform(JointType joint, CoordinateAxis axis, T q) {
 
 /*!
  * Construct the rotational inertia of a uniform density box with a given mass.
+ * 构造具有给定质量的均匀密度箱的旋转惯量。
  * @param mass Mass of the box
  * @param dims Dimensions of the box
  */
@@ -254,6 +263,8 @@ Mat3<typename T::Scalar> rotInertiaOfBox(typename T::Scalar mass,
 /*!
  * Convert from spatial velocity to linear velocity.
  * Uses spatial velocity at the given point.
+ * 从空间速度转换为线速度。
+ * 使用给定点的空间速度。
  */
 template <typename T, typename T2>
 auto spatialToLinearVelocity(const Eigen::MatrixBase<T>& v,
@@ -270,6 +281,7 @@ auto spatialToLinearVelocity(const Eigen::MatrixBase<T>& v,
 
 /*!
  * Convert from spatial velocity to angular velocity.
+ * 从空间速度转换为角速度。
  */
 template <typename T>
 auto spatialToAngularVelocity(const Eigen::MatrixBase<T>& v) {
@@ -282,6 +294,7 @@ auto spatialToAngularVelocity(const Eigen::MatrixBase<T>& v) {
 /*!
  * Compute the classical lienear accleeration of a frame given its spatial
  * acceleration and velocity
+ * 根据坐标系的空间加速度和速度来计算其经典线性加速度
  */
 template <typename T, typename T2>
 auto spatialToLinearAcceleration(const Eigen::MatrixBase<T>& a,
@@ -300,6 +313,7 @@ auto spatialToLinearAcceleration(const Eigen::MatrixBase<T>& a,
 /*!
  * Compute the classical lienear acceleration of a frame given its spatial
  * acceleration and velocity
+ * 根据坐标系的空间加速度和速度来计算其经典线性加速度
  */
 template <typename T, typename T2, typename T3>
 auto spatialToLinearAcceleration(const Eigen::MatrixBase<T>& a,
@@ -322,6 +336,7 @@ auto spatialToLinearAcceleration(const Eigen::MatrixBase<T>& a,
 
 /*!
  * Apply spatial transformation to a point.
+ * 对一个点应用空间变换。
  */
 template <typename T, typename T2>
 auto sXFormPoint(const Eigen::MatrixBase<T>& X,
@@ -339,6 +354,7 @@ auto sXFormPoint(const Eigen::MatrixBase<T>& X,
 
 /*!
  * Convert a force at a point to a spatial force
+ * 将点处的力转换为空间力
  * @param f : force
  * @param p : point
  */

@@ -3,7 +3,7 @@
 
 float FootplanCosts::distanceToGoal(FootplanState &state, FootplanGoal &goal) {
   Vec2<float> dp = state.pBase - goal.goalPos;
-  return dp.norm();
+  return dp.norm();//向量范数，即距离
 }
 
 FootstepPlanner::FootstepPlanner(bool verbose) : _verbose(verbose) {
@@ -19,6 +19,7 @@ void FootstepPlanner::reset() {
   _transitionCosts.clear();
 }
 
+
 void FootstepPlanner::buildInputTrajectory(float duration, float dt, InputTrajectoryState x0, float omega) {
   if(_verbose) {
     printf("Input trajectory with %d steps\n", (int)(duration / dt));
@@ -33,7 +34,7 @@ void FootstepPlanner::buildInputTrajectory(float duration, float dt, InputTrajec
   for(uint32_t i = 0; i < (duration / dt); i++) {
     Vec3<float> vRot = ori::coordinateRotation(ori::CoordinateAxis::Z, theta).transpose() * velocity;
 
-    _inputTrajectory.push_back({{position[0], position[1]}, {vRot[0], vRot[1]}, theta});
+    _inputTrajectory.push_back({{position[0], position[1]}, {vRot[0], vRot[1]}, theta}); //给出周期内每个time step的轨迹信息
 
     position += vRot * dt;
     t += dt;

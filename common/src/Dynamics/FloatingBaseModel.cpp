@@ -31,9 +31,10 @@ using namespace std;
 /*!
  * Apply a unit test force at a contact. Returns the inv contact inertia  in
  * that direction and computes the resultant qdd
+ * 在触点上施加单位测试力。返回该方向上的逆接触惯性并计算所得的qdd
  * @param gc_index index of the contact
  * @param force_ics_at_contact unit test force expressed in inertial coordinates
- * @params dstate - Output paramter of resulting accelerations
+ * @param dstate - Output paramter of resulting accelerations
  * @return the 1x1 inverse contact inertia J H^{-1} J^T
  */
 template <typename T>
@@ -261,6 +262,7 @@ void FloatingBaseModel<T>::resizeSystemMatricies() {
 
 /*!
  * Create the floating body
+ * 创建浮动体
  * @param inertia Spatial inertia of the floating body
  */
 template <typename T>
@@ -297,6 +299,7 @@ void FloatingBaseModel<T>::addBase(const SpatialInertia<T> &inertia) {
 
 /*!
  * Create the floating body
+ * 创建浮动体
  * @param mass Mass of the floating body
  * @param com  Center of mass of the floating body
  * @param I    Rotational inertia of the floating body
@@ -310,6 +313,7 @@ void FloatingBaseModel<T>::addBase(T mass, const Vec3<T> &com,
 
 /*!
  * Add a ground contact point to a model
+ * 为模型添加地面接触点
  * @param bodyID The ID of the body containing the contact point
  * @param location The location (in body coordinate) of the contact point
  * @param isFoot True if foot or not.
@@ -355,6 +359,7 @@ int FloatingBaseModel<T>::addGroundContactPoint(int bodyID,
 /*!
  * Add the bounding points of a box to the contact model. Assumes the box is
  * centered around the origin of the body coordinate system and is axis aligned.
+ * 将box的边界点添加到接触模型。假设该box以身体坐标系的原点为中心并且轴对齐。
  */
 template <typename T>
 void FloatingBaseModel<T>::addGroundContactBoxPoints(int bodyId,
@@ -446,6 +451,7 @@ void FloatingBaseModel<T>::check() {
 
 /*!
  * Compute the total mass of bodies which are not rotors.
+ * 计算不是转子的物体的总质量。
  * @return
  */
 template <typename T>
@@ -458,7 +464,8 @@ T FloatingBaseModel<T>::totalNonRotorMass() {
 }
 
 /*!
- * Compute the total mass of bodies which are not rotors
+ * Compute the total mass of bodies which are include rotors
+ * 计算包括转子在内的物体的总质量
  * @return
  */
 template <typename T>
@@ -542,7 +549,8 @@ void FloatingBaseModel<T>::forwardKinematics() {
 
 /*!
  * Compute the contact Jacobians (3xn matrices) for the velocity
- * of each contact point expressed in absolute coordinates
+ *  of each contact point expressed in absolute coordinates
+ * 计算以绝对坐标表示的每个接触点的速度的接触雅可比矩阵（3xn矩阵）
  */
 template <typename T>
 void FloatingBaseModel<T>::contactJacobians() {
@@ -585,17 +593,20 @@ void FloatingBaseModel<T>::contactJacobians() {
 /*!
  * (Support Function) Computes velocity product accelerations of
  * each link and rotor _avp, and _avprot
+ *（支持功能）计算每个链节和转子_avp和_avprot的速度积加速度
  */
 template <typename T>
 void FloatingBaseModel<T>::biasAccelerations() {
   if (_biasAccelerationsUpToDate) return;
   forwardKinematics();
   // velocity product acceelration of base
+  //基座的速度积加速度
   _avp[5] << 0, 0, 0, 0, 0, 0;
 
   // from base to tips
   for (size_t i = 6; i < _nDof; i++) {
     // Outward kinamtic propagtion
+    //向外运动传播
     _avp[i] = _Xup[i] * _avp[_parents[i]] + _c[i];
     _avprot[i] = _Xuprot[i] * _avp[_parents[i]] + _crot[i];
   }
@@ -604,6 +615,7 @@ void FloatingBaseModel<T>::biasAccelerations() {
 
 /*!
  * Computes the generalized gravitational force (G) in the inverse dynamics
+ * 计算逆动力学中的广义重力（G）
  * @return G (_nDof x 1 vector)
  */
 template <typename T>
@@ -630,6 +642,7 @@ DVec<T> FloatingBaseModel<T>::generalizedGravityForce() {
 
 /*!
  * Computes the generalized coriolis forces (Cqd) in the inverse dynamics
+ * 计算逆动力学中的广义科里奥利力（Cqd）
  * @return Cqd (_nDof x 1 vector)
  */
 template <typename T>
@@ -744,9 +757,10 @@ Vec3<T> FloatingBaseModel<T>::getAngularAcceleration(const int link_idx) {
 }
 
 /*!
- * (Support Function) Computes the composite rigid body inertia
- * of each subtree _IC[i] contains body i, and the body/rotor
+ * (Support Function) Computes the composite rigid body inertia of
+ * each subtree _IC[i] contains body i, and the body/rotor 
  * inertias of all successors of body i.
+ *（支持功能）计算每个子树_IC [i]包含主体i的复合刚体惯性，以及主体i的所有后继体的主体/转子惯性。
  * (key note: _IC[i] does not contain rotor i)
  */
 template <typename T>
@@ -772,6 +786,7 @@ void FloatingBaseModel<T>::compositeInertias() {
 
 /*!
  * Computes the Mass Matrix (H) in the inverse dynamics formulation
+ * 以逆动力学公式计算质量矩阵（H）
  * @return H (_nDof x _nDof matrix)
  */
 template <typename T>
@@ -787,6 +802,7 @@ DMat<T> FloatingBaseModel<T>::massMatrix() {
     SVec<T> f = _IC[j].getMatrix() * _S[j];
     SVec<T> frot = _Irot[j].getMatrix() * _Srot[j];
 
+   
     _H(j, j) = _S[j].dot(f) + _Srot[j].dot(frot);
 
     // Propagate down the tree
@@ -837,6 +853,7 @@ void FloatingBaseModel<T>::forwardAccelerationKinematics() {
 
 /*!
  * Computes the inverse dynamics of the system
+ * 计算系统的逆动力学
  * @return an _nDof x 1 vector. The first six entries
  * give the external wrengh on the base, with the remaining giving the
  * joint torques
@@ -1008,6 +1025,7 @@ T FloatingBaseModel<T>::applyTestForce(const int gc_index,
 
 /*!
  * Compute the inverse of the contact inertia matrix (mxm)
+ * 计算接触惯量矩阵的逆（mxm）
  * @param force_ics_at_contact (3x1)
  *        e.g. if you want the cartesian inv. contact inertia in the z_ics
  *             force_ics_at_contact = [0 0 1]^T
@@ -1053,6 +1071,7 @@ T FloatingBaseModel<T>::invContactInertia(const int gc_index,
 
 /*!
  * Compute the inverse of the contact inertia matrix (mxm)
+ * 计算接触惯量矩阵的逆（mxm）
  * @param force_directions (6xm) each column denotes a direction of interest
  *        col = [ moment in i.c.s., force in i.c.s.]
  *        e.g. if you want the cartesian inv. contact inertia

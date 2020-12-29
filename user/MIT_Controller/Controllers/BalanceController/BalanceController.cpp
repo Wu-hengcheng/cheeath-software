@@ -32,7 +32,7 @@ BalanceController::BalanceController()
 
   QPFinished = false;
 
-  lcm = new lcm::LCM("udpm://239.255.76.67:7667?ttl=1");
+  lcm = new lcm::LCM("udpm://239.255.76.67:7667?ttl=1"); //为了实现LCM通信应该需要更改
   if (lcm->good()) {
     printf("LCM IN BALANCE CONTROL INITIALIZED\n");
   } else {
@@ -187,17 +187,18 @@ void BalanceController::updateProblemData(double* xfb_in, double* p_feet_in,
                                           double* p_des, double* p_act,
                                           double* v_des, double* v_act,
                                           double* O_err, double yaw_act_in) {
-  // Unpack inputs
-  copy_Array_to_Eigen(quat_b_world, xfb_in, 4, 0);
-  copy_Array_to_Eigen(x_COM_world, xfb_in, 3, 4);
-  copy_Array_to_Eigen(omega_b_world, xfb_in, 3, 7);
-  copy_Array_to_Eigen(xdot_COM_world, xfb_in, 3, 10);
-  copy_Array_to_Eigen(p_feet, p_feet_in, 12, 0);
+  // Unpack inputs，解析输入
+  copy_Array_to_Eigen(quat_b_world, xfb_in, 4, 0); //四元数
+  copy_Array_to_Eigen(x_COM_world, xfb_in, 3, 4); //质心相对世界坐标系位置
+  copy_Array_to_Eigen(omega_b_world, xfb_in, 3, 7); //COM相对于world的角速度
+  copy_Array_to_Eigen(xdot_COM_world, xfb_in, 3, 10); //COM的加速度
+  copy_Array_to_Eigen(p_feet, p_feet_in, 12, 0); //足底位置
 
-  yaw_act = yaw_act_in;
+  yaw_act = yaw_act_in; //yaw
 
   R_yaw_act.setZero();
 
+  //yaw的旋转矩阵
   R_yaw_act(0, 0) = cos(yaw_act);
   R_yaw_act(0, 1) = -sin(yaw_act);
   R_yaw_act(1, 0) = sin(yaw_act);
@@ -206,19 +207,19 @@ void BalanceController::updateProblemData(double* xfb_in, double* p_feet_in,
 
   // std::cout << "pfeet = " << p_feet_world << "\n";
 
-  quaternion_to_rotationMatrix(R_b_world, quat_b_world);
+  quaternion_to_rotationMatrix(R_b_world, quat_b_world); //当前四元数转换为旋转矩阵
 
   // Compute controller matrices. Must call these before calculating H_qp and
   // g_qp
-  calc_PDcontrol();
-  update_A_control();
+  calc_PDcontrol(); //计算cheetah 3 （3），得到期望的b_control矩阵
+  update_A_control(); //更新A_control。cheetah3 的（1）
 
   // Compute QP Problem data
-  calc_H_qpOASES();
-  calc_A_qpOASES();
-  calc_g_qpOASES();
+  calc_H_qpOASES(); //计算出qp问题的cost 矩阵H_qpOASES
+  calc_A_qpOASES(); //将c_control矩阵copy到A_qpOASES数组
+  calc_g_qpOASES(); //计算g_eigen矩阵，并存储到g_qpOASES数组
 
-  update_log_variables(p_des, p_act, v_des, v_act, O_err);
+  update_log_variables(p_des, p_act, v_des, v_act, O_err); //更新输入参数，更新数据存储到qp_controller_data
 
   cpu_time = cpu_time_fixed;
   nWSR_qpOASES = nWSR_fixed;
@@ -227,13 +228,14 @@ void BalanceController::updateProblemData(double* xfb_in, double* p_feet_in,
 void BalanceController::SetContactData(double* contact_state_in,
                                        double* min_forces_in,
                                        double* max_forces_in) {
+  //通过函数输入，更新[R1]的（8）的di两项，为QP的约束                                       
   // Unpack inputs
   copy_Array_to_Eigen(contact_state, contact_state_in, 4, 0);
   copy_Array_to_Eigen(minNormalForces_feet, min_forces_in, 4, 0);
   copy_Array_to_Eigen(maxNormalForces_feet, max_forces_in, 4, 0);
 
   calc_lb_ub_qpOASES();
-  calc_lbA_ubA_qpOASES();
+  calc_lbA_ubA_qpOASES();//计算[R1]的（8）的di两项，为QP的约束
 }
 
 void BalanceController::set_desired_swing_pos(double* pFeet_des_in) {
@@ -329,17 +331,20 @@ void BalanceController::verifyModel(double* vbd_command) {
 
 /* --------------- Control Math ------------ */
 
-void BalanceController::calc_PDcontrol() {
+void BalanceController::calc_PDcontrol() {  // 计算cheetah 3 （3），得到期望的b_control矩阵
   // calculate error in yaw rotated coordinates
   error_x_rotated = R_yaw_act.transpose() * (x_COM_world_desired - x_COM_world);
   error_dx_rotated =
       R_yaw_act.transpose() * (xdot_COM_world_desired - xdot_COM_world);
+
   matrixLogRot(R_yaw_act.transpose() * R_b_world_desired *
                    R_b_world.transpose() * R_yaw_act,
-               orientation_error);
-  error_dtheta_rotated =
-      R_yaw_act.transpose() * (omega_b_world_desired - omega_b_world);
+               orientation_error); //计算姿态误差，对应MIT cheetah 3 论文的（2），Log的那一项
 
+  error_dtheta_rotated =
+      R_yaw_act.transpose() * (omega_b_world_desired - omega_b_world);//对应cheetah3中（2），Log后面一项
+
+  //对应cheetah 3 的（2），计算COM期望加速度
   xddot_COM_world_desired(0) +=
       Kp_COMx * error_x_rotated(0) + Kd_COMx * error_dx_rotated(0);
   xddot_COM_world_desired(1) +=
@@ -347,6 +352,7 @@ void BalanceController::calc_PDcontrol() {
   xddot_COM_world_desired(2) +=
       Kp_COMz * error_x_rotated(2) + Kd_COMz * error_dx_rotated(2);
 
+  //计算COM期望角加速度
   omegadot_b_world_desired(0) = Kp_Base_roll * orientation_error(0) +
                                 Kd_Base_roll * error_dtheta_rotated(0);
   omegadot_b_world_desired(1) = Kp_Base_pitch * orientation_error(1) +
@@ -359,7 +365,7 @@ void BalanceController::calc_PDcontrol() {
   Ig << .35, 0, 0, 0, 2.1, 0, 0, 0, 2.1;
 
   MatrixXd II = R_yaw_act.transpose() * R_b_world * Ig * R_b_world.transpose() *
-                R_yaw_act;
+                R_yaw_act; //不清楚为什么要这样转化
 
   // See RHS of Equation (5), [R1]
   b_control << mass * (xddot_COM_world_desired + gravity),
@@ -399,13 +405,14 @@ void BalanceController::update_A_control() {
   }
 }
 
+//通过A_control矩阵计算QP的cost 矩阵H
 void BalanceController::calc_H_qpOASES() {
   // Use the A matrix to compute the QP cost matrix H
   H_eigen = 2 * (A_control.transpose() * S_control * A_control +
                  (alpha_control + 1e-3) * W_control);
 
   // Copy to real_t array (qpOASES data type)
-  copy_Eigen_to_real_t(H_qpOASES, H_eigen, NUM_VARIABLES_QP, NUM_VARIABLES_QP);
+  copy_Eigen_to_real_t(H_qpOASES, H_eigen, NUM_VARIABLES_QP, NUM_VARIABLES_QP); //得到H_qpOASES数组
 }
 
 void BalanceController::calc_A_qpOASES() {
@@ -414,7 +421,7 @@ void BalanceController::calc_A_qpOASES() {
   Eigen::Vector3d t2y;
   t2y << 0, 1, 0;
 
-  for (int i = 0; i < NUM_CONTACT_POINTS; i++) {
+  for (int i = 0; i < NUM_CONTACT_POINTS; i++) { //计算[R1]的（8）的C矩阵
     C_control.block<1, 3>(5 * i + 0, 3 * i)
         << -mu_friction * direction_normal_flatGround.transpose() +
                t1x.transpose();
@@ -441,10 +448,10 @@ void BalanceController::calc_A_qpOASES() {
   }
 
   copy_Eigen_to_real_t(A_qpOASES, C_control, NUM_CONSTRAINTS_QP,
-                       NUM_VARIABLES_QP);
+                       NUM_VARIABLES_QP); //将c_control矩阵copy到A_qpOASES数组
 }
 
-void BalanceController::calc_g_qpOASES() {
+void BalanceController::calc_g_qpOASES() { //计算g_eigen矩阵，并存储到g_qpOASES数组
   g_eigen = -2 * A_control.transpose() * S_control * b_control;
   g_eigen += -2 * xOptPrev.transpose() * alpha_control;
   // Copy to real_t array (qpOASES data type)
@@ -455,9 +462,9 @@ void BalanceController::calc_lb_ub_qpOASES() {
   for (int i = 0; i < NUM_CONTACT_POINTS; i++) {
     for (int j = 0; j < NUM_VARIABLES_PER_FOOT; j++) {
       lb_qpOASES[NUM_VARIABLES_PER_FOOT * i + j] =
-          contact_state(i) * NEGATIVE_NUMBER;
+          contact_state(i) * NEGATIVE_NUMBER; //接触地的都为负无穷，不触地为0
       ub_qpOASES[NUM_VARIABLES_PER_FOOT * i + j] =
-          contact_state(i) * POSITIVE_NUMBER;
+          contact_state(i) * POSITIVE_NUMBER;//接触地的都为正无穷，不触地为0
     }
   }
 
@@ -470,7 +477,7 @@ void BalanceController::calc_lb_ub_qpOASES() {
   }
 }
 
-void BalanceController::calc_lbA_ubA_qpOASES() {
+void BalanceController::calc_lbA_ubA_qpOASES() { //计算[R1]的（8）的di两项，为QP的约束
   for (int i = 0; i < NUM_CONTACT_POINTS; i++) {
     lbA_qpOASES[NUM_CONSTRAINTS_PER_FOOT * i] =
         contact_state(i) * NEGATIVE_NUMBER;
@@ -515,6 +522,7 @@ void BalanceController::publish_data_lcm() {
 void BalanceController::update_log_variables(double* p_des, double* p_act,
                                              double* v_des, double* v_act,
                                              double* O_err) {
+  //数据类型转化
   copy_Eigen_to_double(p_des, x_COM_world_desired, 3);
   copy_Eigen_to_double(p_act, x_COM_world, 3);
   copy_Eigen_to_double(v_des, xdot_COM_world_desired, 3);
@@ -522,6 +530,7 @@ void BalanceController::update_log_variables(double* p_des, double* p_act,
   copy_Eigen_to_double(O_err, orientation_error, 3);
 
   for (int i = 0; i < 3; i++) {
+    //将数据存储到qp_controller_data
     qp_controller_data.p_des[i] = x_COM_world_desired(i);
     qp_controller_data.p_act[i] = x_COM_world(i);
     qp_controller_data.v_des[i] = xdot_COM_world_desired(i);
@@ -533,6 +542,7 @@ void BalanceController::update_log_variables(double* p_des, double* p_act,
 }
 /* ------------ Set Parameter Values -------------- */
 
+//用于设置[R1] （3）、（4）的PD值
 void BalanceController::set_PDgains(double* Kp_COM_in, double* Kd_COM_in,
                                     double* Kp_Base_in, double* Kd_Base_in) {
   Kp_COMx = Kp_COM_in[0];
@@ -556,10 +566,11 @@ void BalanceController::set_desiredTrajectoryData(
     double* rpy_des_in, double* p_des_in, double* omegab_des_in,
     double* v_des_in)  //, double* vdot_des_in)
 {
-  x_COM_world_desired << p_des_in[0], p_des_in[1], p_des_in[2];
-  rpyToR(R_b_world_desired, rpy_des_in);
-  omega_b_world_desired << omegab_des_in[0], omegab_des_in[1], omegab_des_in[2];
-  xdot_COM_world_desired << v_des_in[0], v_des_in[1], v_des_in[2];
+  //通过输入参数，设置期望轨迹数据
+  x_COM_world_desired << p_des_in[0], p_des_in[1], p_des_in[2]; //期望COM位置
+  rpyToR(R_b_world_desired, rpy_des_in); //期望旋转矩阵
+  omega_b_world_desired << omegab_des_in[0], omegab_des_in[1], omegab_des_in[2];//期望COM角速度
+  xdot_COM_world_desired << v_des_in[0], v_des_in[1], v_des_in[2]; //期望COM线速度
   // xddot_COM_world_desired << vdot_des_in[0], vdot_des_in[1], vdot_des_in[2];
 }
 
@@ -685,7 +696,7 @@ void BalanceController::copy_real_t_to_Eigen(Eigen::VectorXd& target,
 
 void BalanceController::matrixLogRot(const Eigen::MatrixXd& R,
                                      Eigen::VectorXd& omega) {
-  // theta = acos( (Trace(R) - 1)/2 )
+  // 计算theta = acos( (Trace(R) - 1)/2 )
   double theta;
   double tmp = (R(0, 0) + R(1, 1) + R(2, 2) - 1) / 2;
   if (tmp >= 1.) {
@@ -696,7 +707,7 @@ void BalanceController::matrixLogRot(const Eigen::MatrixXd& R,
     theta = acos(tmp);
   }
 
-  // Matrix3F omegaHat = (R-R.transpose())/(2 * sin(theta));
+  // 计算 Matrix3F omegaHat = (R-R.transpose())/(2 * sin(theta));
   // crossExtract(omegaHat,omega);
   omega << R(2, 1) - R(1, 2), R(0, 2) - R(2, 0), R(1, 0) - R(0, 1);
   if (theta > 10e-5) {
@@ -731,7 +742,7 @@ void BalanceController::matrixExpOmegaCross(const Eigen::VectorXd& omega,
 
 void BalanceController::quaternion_to_rotationMatrix(Eigen::MatrixXd& R,
                                                      Eigen::VectorXd& quat) {
-  // wikipedia
+  // wikipedia,四元数转换为旋转矩阵
   R(0, 0) = 1 - 2 * quat(2) * quat(2) - 2 * quat(3) * quat(3);
   R(0, 1) = 2 * quat(1) * quat(2) - 2 * quat(0) * quat(3);
   R(0, 2) = 2 * quat(1) * quat(3) + 2 * quat(0) * quat(2);
@@ -743,6 +754,7 @@ void BalanceController::quaternion_to_rotationMatrix(Eigen::MatrixXd& R,
   R(2, 2) = 1 - 2 * quat(1) * quat(1) - 2 * quat(2) * quat(2);
 }
 
+//通过RPY得到旋转矩阵
 void BalanceController::rpyToR(Eigen::MatrixXd& R, double* rpy_in) {
   Eigen::Matrix3d Rz, Ry, Rx;
 

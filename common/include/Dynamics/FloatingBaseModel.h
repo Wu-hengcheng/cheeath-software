@@ -1,6 +1,6 @@
 /*! @file FloatingBaseModel.h
  *  @brief Implementation of Rigid Body Floating Base model data structure
- *
+ *  刚体浮动基座模型数据结构的实现
  * This class stores the kinematic tree described in "Rigid Body Dynamics
  * Algorithms" by Featherstone (download from
  * https://www.springer.com/us/book/9780387743141 on MIT internet)
@@ -33,6 +33,7 @@ using namespace spatial;
 
 /*!
  * The state of a floating base model (base and joints)
+ * 浮动基模型的状态（基座和关节）
  */
 template <typename T>
 struct FBModelState {
@@ -53,8 +54,9 @@ struct FBModelState {
 };
 
 /*!
- * The result of running the articulated body algorithm on a rigid-body floating
+ * The result of running the articulated body algorithm on a rigid-body floating 
  * base model
+ * 在刚体浮动基模型上运行铰接体算法的结果
  */
 template <typename T>
 struct FBModelStateDerivative {
@@ -65,8 +67,9 @@ struct FBModelStateDerivative {
 };
 
 /*!
- * Class to represent a floating base rigid body model with rotors and ground
- * contacts. No concept of state.
+ * Class to represent a floating base rigid body model with rotors and ground 
+ * contacts. No concept of state. 
+ * 表示具有转子和接地触点的浮动基刚体模型的类。没有状态的概念。
  */
 template <typename T>
 class FloatingBaseModel {
@@ -102,6 +105,7 @@ class FloatingBaseModel {
 
   /*!
    * Get vector of body spatial inertias
+   * 获取body的空间惯性矢量
    * @return Vector of body spatial inertias
    */
   const std::vector<SpatialInertia<T>,
@@ -112,6 +116,7 @@ class FloatingBaseModel {
 
   /*!
    * Get vector of rotor spatial inertias
+   * 获取转子空间惯性矢量
    * @return Vector of rotor spatial inertias
    */
   const std::vector<SpatialInertia<T>,
@@ -127,6 +132,7 @@ class FloatingBaseModel {
 
   /*!
    * Set the flag to enable computing contact info for a given contact point
+   * 设置标志以启用计算给定接触点的接触信息
    * @param gc_index : index of contact point
    * @param flag : enable/disable contact calculation
    */
@@ -150,6 +156,7 @@ class FloatingBaseModel {
 
   /*!
    * Update the state of the simulator, invalidating previous results
+   * 更新模拟器的状态，使以前的结果无效
    * @param state : the new state
    */
   void setState(const FBModelState<T>& state) {
@@ -163,6 +170,7 @@ class FloatingBaseModel {
 
   /*!
    * Mark all previously calculated values as invalid
+   * 将所有先前计算的值标记为无效
    */
   void resetCalculationFlags() {
     _articulatedBodiesUpToDate = false;
@@ -174,6 +182,7 @@ class FloatingBaseModel {
 
   /*!
    * Update the state derivative of the simulator, invalidating previous results.
+   * 更新模拟器的状态导数，使以前的结果无效。
    * @param dState : the new state derivative
    */
   void setDState(const FBModelStateDerivative<T>& dState) {

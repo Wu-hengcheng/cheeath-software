@@ -18,6 +18,7 @@ using namespace spatial;
 
 /*!
  * Representation of Rigid Body Inertia as a 6x6 Spatial Inertia Tensor
+ * 刚体惯性表示为6x6空间惯性张量
  */
 template <typename T>
 class SpatialInertia {
@@ -26,6 +27,7 @@ class SpatialInertia {
   /*!
    * Construct spatial inertia from mass, center of mass, and 3x3 rotational
    * inertia
+   * 根据质量，质心和3x3旋转惯量构造空间惯性
    */
   SpatialInertia(T mass, const Vec3<T>& com, const Mat3<T>& inertia) {
     Mat3<T> cSkew = vectorToSkewMat(com);
@@ -38,16 +40,19 @@ class SpatialInertia {
 
   /*!
    * Construct spatial inertia from 6x6 matrix
+   * 从6x6矩阵构造空间惯性
    */
   explicit SpatialInertia(const Mat6<T>& inertia) { _inertia = inertia; }
 
   /*!
    * If no argument is given, zero.
+   * 如果未提供任何参数，则为零。
    */
   SpatialInertia() { _inertia = Mat6<T>::Zero(); }
 
   /*!
    * Construct spatial inertia from mass property vector
+   * 根据质量属性向量构造空间惯性
    */
   explicit SpatialInertia(const MassProperties<T>& a) {
     _inertia(0, 0) = a(4);
@@ -70,6 +75,7 @@ class SpatialInertia {
    * Linear Matrix Inequalities for Physically Consistent Inertial Parameter
    *   Identification: A Statistical Perspective on the Mass Distribution, by
    *   Wensing, Kim, Slotine
+   * 利用伪惯性构造空间惯性
    * @param P
    */
   explicit SpatialInertia(const Mat4<T>& P) {
@@ -87,6 +93,7 @@ class SpatialInertia {
 
   /*!
    * Convert spatial inertia to mass property vector
+   * 将空间惯性转换为质量属性矢量
    */
   MassProperties<T> asMassPropertyVector() {
     MassProperties<T> a;
@@ -98,6 +105,7 @@ class SpatialInertia {
 
   /*!
    * Get 6x6 spatial inertia
+   * 获得6x6空间惯性
    */
   const Mat6<T>& getMatrix() const { return _inertia; }
 
@@ -112,6 +120,7 @@ class SpatialInertia {
 
   /*!
    * Get center of mass location
+   * 获取质心位置
    */
   Vec3<T> getCOM() {
     T m = getMass();
@@ -122,6 +131,7 @@ class SpatialInertia {
 
   /*!
    * Get 3x3 rotational inertia
+   * 获得3x3旋转惯量
    */
   Mat3<T> getInertiaTensor() {
     T m = getMass();
@@ -136,6 +146,7 @@ class SpatialInertia {
    * Linear Matrix Inequalities for Physically Consistent Inertial Parameter
    *   Identification: A Statistical Perspective on the Mass Distribution, by
    *   Wensing, Kim, Slotine
+   * 转换为4x4伪惯性矩阵。
    */
   Mat4<T> getPseudoInertia() {
     Vec3<T> h = matToSkewVec(_inertia.template topRightCorner<3, 3>());
@@ -152,6 +163,7 @@ class SpatialInertia {
 
   /*!
    * Flip inertia matrix around an axis.  This isn't efficient, but it works!
+   * 绕轴翻转惯量矩阵。这效率不高，但是可以！
    */
   SpatialInertia flipAlongAxis(CoordinateAxis axis) {
     Mat4<T> P = getPseudoInertia();

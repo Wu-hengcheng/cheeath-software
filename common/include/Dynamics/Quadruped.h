@@ -90,6 +90,7 @@ class Quadruped {
 
   /*!
    * Get location of the hip for the given leg in robot frame
+   * 在机器人坐标系中获取给定腿部的髋关节位置
    * @param leg : the leg index
    */
   Vec3<T> getHipLocation(int leg) {

@@ -6,6 +6,7 @@
  *  All quantities are in the "leg frame" which has the same orientation as the
  * body frame, but is shifted so that 0,0,0 is at the ab/ad pivot (the "hip
  * frame").
+ * this is the swing leg control modual
  */
 
 #ifndef PROJECT_LEGCONTROLLER_H
