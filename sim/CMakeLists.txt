@@ -4,8 +4,7 @@ project(sim)
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 
-execute_process(COMMAND ${CMAKE_SOURCE_DIR}/scripts/find_qt_path.sh OUTPUT_VARIABLE CMAKE_PREFIX_PATH_1)
-SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH_1})
+SET(CMAKE_PREFIX_PATH /opt/Qt5.14.2/5.14.2/gcc_64)
 # message("CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 
 if(POLICY CMP0071)
@@ -16,6 +15,11 @@ endif()
 set(CMAKE_AUTOMOC ON)
 # Create code from a list of Qt designer ui files
 set(CMAKE_AUTOUIC ON)
+
+set(Qt5Core_DIR /opt/Qt5.14.2/5.14.2/gcc_64/lib/cmake/Qt5Core)
+set(Qt5Widgets_DIR /opt/Qt5.14.2/5.14.2/gcc_64/lib/cmake/Qt5Widgets)
+set(Qt5Gamepad_DIR /opt/Qt5.14.2/5.14.2/gcc_64/lib/cmake/Qt5Gamepad)
+
 find_package(Qt5Core CONFIG REQUIRED)
 find_package(Qt5Widgets CONFIG REQUIRED)
 get_target_property(QtCore_location Qt5::Core LOCATION)
@@ -61,5 +65,9 @@ endif (CMAKE_SYSTEM_NAME MATCHES Linux)
 if (APPLE)
   target_link_libraries(sim "-framework GLUT")
 endif (APPLE)
+
+
+
+
 
 
