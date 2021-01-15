@@ -8,6 +8,13 @@
  *  - omegaBody: angular velocity in body frame
  *  - omegaWorld: angular velocity in world frame
  *  - rpy: roll pitch yaw
+ * 
+ *  姿态估计器需要计算：
+ *  -方向：表示方向的四元数
+ *  -rBody：坐标变换矩阵（满足vBody=rBody*vWorld）
+ *  -omegaBody：身体框架中的角速度
+ *  -omegaWorld：世界框架中的角速度
+ *  - rpy: roll pitch yaw
  */
 #ifndef PROJECT_ORIENTATIONESTIMATOR_H
 #define PROJECT_ORIENTATIONESTIMATOR_H

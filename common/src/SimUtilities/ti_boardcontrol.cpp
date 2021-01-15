@@ -2,6 +2,7 @@
  *  @brief TI Board Code, used to simulate the TI board
  *
  *  This is mostly a copy of the exact code that runs on the TI Board
+ *  这主要是TI板上运行的确切代码的副本
  */
 
 #include <algorithm>

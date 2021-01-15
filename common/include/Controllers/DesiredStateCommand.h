@@ -3,6 +3,7 @@
  * @brief Logic to convert a joystick command into a desired trajectory for the robot
  *
  * This will generate a state trajectory which can easily be used for model predictive controllers
+ * 将手柄的输入转换为机器人期望轨迹，生成状态轨迹用于MPC控制器
  */
 
 /*========================= Gamepad Control ==========================*/
@@ -21,7 +22,7 @@
 #include "robot/include/rt/rt_rc_interface.h"
 
 /**
- *
+ *期望的状态数据
  */
 template <typename T>
 struct DesiredStateData {

@@ -1,6 +1,7 @@
 /*!
  * @file FootSwingTrajectory.h
  * @brief Utility to generate foot swing trajectories.
+ * 计算摆动腿的轨迹，为贝塞尔曲线
  *
  * Currently uses Bezier curves like Cheetah 3 does
  */
@@ -12,6 +13,7 @@
 
 /*!
  * A foot swing trajectory for a single foot
+ * 单腿摆动轨迹的参数
  */
 template<typename T>
 class FootSwingTrajectory {
@@ -31,7 +33,7 @@ public:
 
   /*!
    * Set the starting location of the foot
-   * @param p0 : the initial foot position
+   * @param p0 : the initial foot position，初始位置
    */
   void setInitialPosition(Vec3<T> p0) {
     _p0 = p0;
@@ -39,7 +41,7 @@ public:
 
   /*!
    * Set the desired final position of the foot
-   * @param pf : the final foot posiiton
+   * @param pf : the final foot posiiton，末端位置
    */
   void setFinalPosition(Vec3<T> pf) {
     _pf = pf;
@@ -48,11 +50,14 @@ public:
   /*!
    * Set the maximum height of the swing
    * @param h : the maximum height of the swing, achieved halfway through the swing
+   * 摆动最大高度
    */
   void setHeight(T h) {
     _height = h;
   }
-
+  /*!
+   * 计算贝塞尔摆动轨迹
+   */
   void computeSwingTrajectoryBezier(T phase, T swingTime);
 
   /*!

@@ -21,6 +21,7 @@
 
 /*!
  * Data sent from the control algorithm to the legs.
+ * 从控制算法传到腿部的数据
  */
 template <typename T>
 struct LegControllerCommand {
@@ -35,6 +36,7 @@ struct LegControllerCommand {
 
 /*!
  * Data returned from the legs to the control code.
+ * 从腿部反馈回控制代码的数据
  */
 template <typename T>
 struct LegControllerData {

@@ -5,6 +5,7 @@
  *  PositionVelocityEstimators should compute:
  *  - body position/velocity in world/body frames
  *  - foot positions/velocities in body/world frame
+ *  位置速度估计器需要计算：机体和足部在世界/本地坐标系下的位置和速度
  */
 
 #ifndef PROJECT_POSITIONVELOCITYESTIMATOR_H

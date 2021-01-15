@@ -8,7 +8,6 @@
  * as well as if they've been initialized or not ControlParameters must be
  * initialized, either from reading from a file, reading from LCM, or some other
  * way
- *
  * See test_ControlParameters for an example of how this works
  */
 
